@@ -50,103 +50,45 @@ body {
     text-decoration: none; /* Remove underline */
 }
 
-/* Main Content Styling */
-.content {
+.chart-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.analytics-section {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    padding: 20px;
-    gap: 20px; /* Add spacing between elements */
+    justify-content: space-around;
+    margin-bottom: 20px;
 }
-
-/* Chart Section */
-.chart-container {
-    flex: 1;
-    min-width: 300px;
-    padding: 20px;
-    background-color: white;
+.analytics-card {
+    width: 30%;
+    padding: 15px;
+    text-align: center;
+    border: 1px solid #ddd;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
-img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 0 auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.analytics-card h3 {
+    margin: 0;
+    font-size: 18px;
 }
-
-/* Data Table Styling */
-.data-table {
-    flex: 1;
-    min-width: 300px;
-    padding: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.analytics-card p {
+    margin: 5px 0;
+    font-size: 16px;
 }
-
+.table-section {
+    margin-top: 20px;
+}
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
 }
-
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-th {
-    background-color: #f2f2f2;
-}
-
-/* Real-Time Reports Section */
-.data-container {
-    flex: 1;
-    min-width: 300px;
-    padding: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.report-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #ddd;
-}
-
-.report-item:last-child {
-    border-bottom: none;
-}
-
-.report-item span {
-    font-weight: bold;
-}
-
-/* Headings Styling */
-h1, h2 {
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px;
     text-align: center;
-    color: #333;
-    margin-bottom: 20px;
 }
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .content {
-        flex-direction: column;
-    }
-
-    .chart-container,
-    .data-table,
-    .data-container {
-        margin-bottom: 20px;
-    }
+table th {
+    background-color: #f4f4f4;
 }
 </style>
 </head>
@@ -154,7 +96,7 @@ h1, h2 {
     {% extends "home.html" %}
 
     {% block content %}
-        <div class="full">
+    <div class="full">
         <div class="button-container">
             <a href="/visualization/roles_chart" class="button">View Users by Roles</a>
             <a href="/visualization/sales_by_city" class="button">Sales Based on City</a>
@@ -168,38 +110,54 @@ h1, h2 {
         <!-- Main Content -->
     <div class="content">
         <!-- Chart Section -->
-        <div class="chart-container">
-            <h1>{{title}}</h1>
-            {% if chart_url %}
-                <img src="data:image/png;base64,{{ chart_url }}" >
-            {% else %}
-                <p>No chart available.</p>
-            {% endif %}
+        <div class="chart-section">
+            <img src="data:image/png;base64,{{ chart_data }}" alt="Stock Analytics Chart">
         </div>
-
-        <!-- Real-Time Data Table -->
-        <div class="data-table">
-            <h2>{{side_title}}</h2>
+        
+        <!-- Real-Time Reports -->
+        <div class="analytics-section">
+            <div class="analytics-card">
+                <h3>Total Stock</h3>
+                <p>{{ analytics['Total Stock'] }}</p>
+            </div>
+            <div class="analytics-card">
+                <h3>Category with Max Stock</h3>
+                <p>{{ analytics['Category with Max Stock'] }}</p>
+            </div>
+            <div class="analytics-card">
+                <h3>Category with Min Stock</h3>
+                <p>{{ analytics['Category with Min Stock'] }}</p>
+            </div>
+        </div>
+        <!-- Table Section -->
+        <div class="table-section">
+            <h3>Product Details</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>{{t1}}</th>
-                        <th>{{t2}}</th>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Price ($)</th>
+                        <th>Manufacturer</th>
+                        <th>Country of Origin</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for city, sales in city_sales %}
+                    {% for product in products %}
                     <tr>
-                        <td>{{ city }}</td>
-                        <td>{{ sales * 100 }}</td>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.category }}</td>
+                        <td>{{ product.quantity }}</td>
+                        <td>{{ product.price }}</td>
+                        <td>{{ product.manufacturer }}</td>
+                        <td>{{ product.country_of_origin }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        
-    </div>
-        </div>
+</div>
     {% endblock %}
     
 </body>

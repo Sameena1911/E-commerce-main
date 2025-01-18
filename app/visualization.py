@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from sqlalchemy import func
 import io
+from datetime import datetime, timedelta
+from io import BytesIO
 import base64
 from . import db
 from . models import *
@@ -77,46 +79,271 @@ def sales_by_city():
     # Pass chart URL and data to the template
     return render_template('sales_city.html', chart_url=chart_url, city_sales=city_sales,title='sales by city',side_title='Real Time data',t1='City',t2='Sales')
 
-@visualization.route('/order_insights')
-def order_insights():
-    # Fetch data from the Order table
-    total_orders = db.session.query(func.count(Order.id)).scalar()
-    total_revenue = db.session.query(func.sum(Order.order_amount)).scalar()
-    
-    # Fake growth logic for demonstration
-    cagr = 22.4  # Assuming a constant CAGR
-    revenue_2023 = total_revenue or 10.2  # Default starting point in billion dollars
-    revenue_2032 = revenue_2023 * ((1 + (cagr / 100)) ** 9)  # Compound growth
-    
-    # Generate yearly growth chart (2024-2032)
-    years = list(range(2024, 2033))
-    revenues = [revenue_2023 * ((1 + (cagr / 100)) ** i) for i in range(len(years))]
-    
-    # Create a bar chart
-    plt.figure(figsize=(10, 6))
-    plt.bar(years, revenues, color="#f7c74f")  # Yellow bars (subtle color)
-    plt.title("Projected Revenue Growth", fontsize=16, weight='bold')
-    plt.ylabel("Revenue (Billion USD)", fontsize=12)
-    plt.xlabel("Year", fontsize=12)
-    plt.xticks(years, rotation=45)
-    plt.tight_layout()
+@visualization.route('/revenue_trends')
+def revenue_trends():
+    # Dummy data for revenue trends
+    categories = ["Electronics", "Fashion", "Groceries", "Books", "Home Appliances"]
+    revenues = [500000, 300000, 200000, 100000, 150000]  # In INR
+    total_orders = 3000  # Total number of orders (dummy value)
+    previous_year_revenue = 1000000  # INR (2024)
+    current_year_revenue = sum(revenues)  # INR (2025)
 
-    # Convert chart to base64
-    chart_img = io.BytesIO()
-    plt.savefig(chart_img, format='png', bbox_inches="tight")
-    chart_img.seek(0)
-    chart_url = base64.b64encode(chart_img.getvalue()).decode('utf8')
+    # Calculate expected revenue for 2030 based on a growth rate
+    growth_rate = 0.1  # Assume 10% growth rate annually
+    years = 2030 - 2025
+    expected_revenue_2030 = current_year_revenue * ((1 + growth_rate) ** years)
+
+    # Analytics data
+    # Analytics data
+    analytics = {
+    "Total Orders": f"{total_orders}",
+    "Total Revenue (INR)": f"{current_year_revenue:,}",
+    "Expected Revenue in 2030 (INR)": f"{expected_revenue_2030:,.2f}",
+    "Previous Year Revenue (INR)": f"{previous_year_revenue:,}",
+    "Current Year Revenue (INR)": f"{current_year_revenue:,}",
+    "Top Category": categories[revenues.index(max(revenues))],
+    "Least Category": categories[revenues.index(min(revenues))],
+    "Categories": list(zip(categories, revenues))  # Add categories and revenue as tuples
+    }
+
+
+    # Create a pie chart
+    plt.figure(figsize=(8, 6))
+    colors = ['#A2D2FF', '#BDE0FE', '#FFAFCC', '#FFC8DD', '#D4A5A5']
+    plt.pie(
+        revenues,
+        labels=categories,
+        autopct="%1.1f%%",
+        startangle=140,
+        colors=colors,
+        textprops={'color': '#333', 'fontsize': 12}
+    )
+    plt.title("Revenue by Category (INR)", fontsize=16, color="#264653")
+
+    # Save chart as base64 string
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight")
+    buf.seek(0)
+    chart_data = base64.b64encode(buf.getvalue()).decode("utf-8")
+    buf.close()
     plt.close()
 
-    # Real-time analytics
-    recent_orders = db.session.query(Order.order_date, Order.order_amount).order_by(Order.order_date.desc()).limit(5).all()
-    report_data = [{"date": order.order_date, "amount": order.order_amount} for order in recent_orders]
+    return render_template(
+        "revenue_trends.html",
+        chart_data=chart_data,
+        analytics=analytics,
+        previous_year_revenue=previous_year_revenue,
+        current_year_revenue=current_year_revenue
+    )
+@visualization.route('/delivery_chart')
+def delivery_chart():
+    # Example data (replace with database query)
+    order_status_counts = {
+        "Pending": 15,
+        "Shipped": 25,
+        "Delivered": 50,
+        "Failed": 10
+    }
 
-    # Render HTML template with chart and data
-    return render_template('order_insight.html', 
-                           chart_url=chart_url, 
-                           total_orders=total_orders, 
-                           total_revenue=total_revenue, 
-                           cagr=cagr, 
-                           revenue_2032=round(revenue_2032, 2),
-                           report_data=report_data,title='Order Insights',side_title='Real time data',total_order_title='Total Orders:',total_revenue_title='Total Revenue:',percentage='%',cagr_title='CAGR:',dollar='$',money='Billion',revenue_2032_title='Projected Revenue in 2032:',report_title='Recent Orders:')
+    # Data for stacked bar chart
+    categories = ["Pending", "Shipped", "Delivered", "Failed"]
+    values = list(order_status_counts.values())
+    
+    # Subtle pastel colors
+    colors = ['#f4a261', '#a8dadc', '#2a9d8f', '#e76f51']  # Light orange, light teal, green, soft red
+
+    # Create a horizontal stacked bar chart
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.barh(categories, values, color=colors)
+    ax.set_xlabel("Number of Orders", fontsize=12)
+    ax.set_title("Order Status Distribution", fontsize=16)
+    ax.grid(alpha=0.3)
+
+    # Save chart as a base64 string
+    buf = BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight")
+    buf.seek(0)
+    chart_data = base64.b64encode(buf.getvalue()).decode("utf-8")
+    buf.close()
+
+    # Analytics Data
+    total_orders = sum(values)
+    analytics = {
+        "Pending Orders": order_status_counts["Pending"],
+        "Shipped Orders": order_status_counts["Shipped"],
+        "Delivered Orders": order_status_counts["Delivered"],
+        "Failed Orders": order_status_counts["Failed"],
+        "Total Orders": total_orders,
+    }
+
+    # Sample order table data
+    orders = [
+        {"id": 1, "amount": 200, "status": "Pending", "payment": "Cash on Delivery"},
+        {"id": 2, "amount": 350, "status": "Delivered", "payment": "Credit Card"},
+        {"id": 3, "amount": 150, "status": "Failed", "payment": "UPI"},
+        {"id": 4, "amount": 400, "status": "Shipped", "payment": "Cash on Delivery"},
+        {"id": 5, "amount": 250, "status": "Delivered", "payment": "UPI"},
+    ]
+
+    return render_template(
+        "delivery_chart.html", chart_data=chart_data, analytics=analytics, orders=orders
+    )
+@visualization.route("/customer_trends")
+def customer_trends():
+    # Data for the chart
+    today = datetime.today()
+    days = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(12)]  # Adjust for 12 days
+    new_customers = [100, 120, 140, 130, 150, 180, 200, 220, 240, 260, 280, 300]
+    returning_customers = [50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 220]
+
+    # Ensure days, new_customers, and returning_customers all have the same length
+    if len(days) != len(new_customers) or len(days) != len(returning_customers):
+        raise ValueError("Data dimensions do not match. Ensure all lists have the same length.")
+
+    # Generate the chart using Matplotlib
+    plt.figure(figsize=(10, 5))
+    bar_width = 0.4
+    x_indices = range(len(days))
+
+    plt.bar(x_indices, new_customers, width=bar_width, label="New Customers", color="#6a89cc", alpha=0.8)
+    plt.bar([x + bar_width for x in x_indices], returning_customers, width=bar_width, label="Returning Customers", color="#82ccdd", alpha=0.8)
+
+    plt.title("New and Returning Customers Trends", fontsize=14)
+    plt.xlabel("Days")
+    plt.ylabel("Number of Customers")
+    plt.xticks([x + bar_width / 2 for x in x_indices], days, rotation=45, ha="right")
+    plt.legend()
+    plt.tight_layout()
+
+    # Save the chart to a buffer and encode it as a base64 string
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format="png")
+    buffer.seek(0)
+    chart_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    buffer.close()
+
+    # Example data for the table
+    new_customers_details = [
+        {"name": "John Doe", "location": "New York", "date_joined": datetime(2025, 1, 1)},
+        {"name": "Jane Smith", "location": "Los Angeles", "date_joined": datetime(2025, 1, 5)},
+        {"name": "Michael Johnson", "location": "Chicago", "date_joined": datetime(2025, 1, 7)},
+        {"name": "Alice Williams", "location": "San Francisco", "date_joined": datetime(2025, 1, 10)},
+        {"name": "David Brown", "location": "Houston", "date_joined": datetime(2025, 1, 12)},
+    ]
+
+    # Total counts
+    total_new_customers = sum(new_customers)
+    total_returning_customers = sum(returning_customers)
+
+    return render_template(
+        "Customer_trends.html",
+        chart_base64=chart_base64,
+        new_customers_details=new_customers_details,
+        total_new_customers=total_new_customers,
+        total_returning_customers=total_returning_customers,
+    )
+
+@visualization.route("/financial_health")
+def financial_health():
+    # Generate random daily data for financial performance
+    today = datetime.today()
+    days = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(5)]
+    revenue = [1000, 1500, 2000, 2500, 3000]
+    expenses = [800, 1200, 1500, 2000, 2500]
+    profit = [revenue[i] - expenses[i] for i in range(len(revenue))]
+
+    financial_data = [
+        {"customer": "ab", "product": "Laptop", "quantity": 2, "total": 2000, "expenses": 1500, "profit": 500},
+        {"customer": "Bb", "product": "Smartphone", "quantity": 3, "total": 3000, "expenses": 2200, "profit": 800},
+        {"customer": "Cc", "product": "Headphones", "quantity": 5, "total": 500, "expenses": 300, "profit": 200},
+        {"customer": "Dd", "product": "Monitor", "quantity": 1, "total": 300, "expenses": 200, "profit": 100},
+        {"customer": "Ee", "product": "Keyboard", "quantity": 4, "total": 400, "expenses": 300, "profit": 100},
+    ]
+
+    # Generate real-time analytics data for the right side panel
+    real_time_analytics = {
+        "Current Revenue": f"{revenue[-1]}",
+        "Current Expenses": f"{expenses[-1]}",
+        "Current Profit": f"{profit[-1]}",
+    }
+
+    # Generate line chart with subtle colors
+    plt.figure(figsize=(10, 5))
+    pastel_colors = {
+        "Revenue": "#a8dadc",  # Light blue-green
+        "Expenses": "#f4a261",  # Light orange
+        "Profit": "#e76f51"    # Soft red
+    }
+    plt.plot(days, revenue, marker='o', label="Revenue", color=pastel_colors["Revenue"], linewidth=2)
+    plt.plot(days, expenses, marker='o', label="Expenses", color=pastel_colors["Expenses"], linewidth=2)
+    plt.plot(days, profit, marker='o', label="Profit", color=pastel_colors["Profit"], linewidth=2)
+    plt.title("Financial Performance Over Time", fontsize=16)
+    plt.xlabel("Days", fontsize=12)
+    plt.ylabel("Amount ($)", fontsize=12)
+    plt.legend(fontsize=10)
+    plt.grid(alpha=0.3)
+
+    img_line = io.BytesIO()
+    plt.savefig(img_line, format='png', bbox_inches='tight')
+    img_line.seek(0)
+    img_line_base64 = base64.b64encode(img_line.getvalue()).decode('utf-8')
+    plt.close()
+
+    return render_template("financial_health.html", 
+                           img_line_base64=img_line_base64, 
+                           real_time_analytics=real_time_analytics, 
+                           days=days, 
+                           revenue=revenue, 
+                           expenses=expenses, 
+                           profit=profit,
+                           financial_data=financial_data)
+@visualization.route('/inventory_status')
+def inventory_status():
+    categories = db.session.query(
+        Product.category, func.sum(Product.quantity).label('total_stock')
+    ).group_by(Product.category).all()
+
+    # Data for visualization
+    category_labels = [category[0] for category in categories]
+    category_stock = [category[1] for category in categories]
+
+    # Analytics Data
+    total_stock = sum(category_stock)
+    max_stock_category = category_labels[category_stock.index(max(category_stock))]
+    min_stock_category = category_labels[category_stock.index(min(category_stock))]
+
+    analytics = {
+        "Total Stock": total_stock,
+        "Category with Max Stock": max_stock_category,
+        "Category with Min Stock": min_stock_category,
+    }
+
+    # Default stock value
+    default_stock = 2
+
+    # Create a bar chart with a default stock line
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.bar(category_labels, category_stock, color=plt.cm.Pastel1.colors)
+    ax.axhline(y=default_stock, color='red', linestyle='--', linewidth=1.5, label=f"Default Stock: {default_stock}")
+    ax.set_title("Stock Analytics by Category", fontsize=14)
+    ax.set_xlabel("Categories")
+    ax.set_ylabel("Total Stock (Quantity)")
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+    ax.legend(loc='upper right')
+
+    # Save chart as a base64 string
+    buf = BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight")
+    buf.seek(0)
+    chart_data = base64.b64encode(buf.getvalue()).decode("utf-8")
+    buf.close()
+
+    # Query to get product details
+    products = db.session.query(Product).all()
+
+    return render_template(
+        "inventory_status.html",
+        chart_data=chart_data,
+        analytics=analytics,
+        products=products,
+    )

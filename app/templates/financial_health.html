@@ -148,6 +148,43 @@ h1, h2 {
         margin-bottom: 20px;
     }
 }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+th, td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+th {
+    background-color: #f4f4f4;
+}
+.chart-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.analytics {
+    margin-bottom: 20px;
+}
+.analytics-section {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+ 
+    padding: 15px;
+    border-radius: 10px;
+}
+.analytics-box {
+    text-align: center;
+    background-color: white;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+    width: 30%;
+}
 </style>
 </head>
 <body>
@@ -159,48 +196,61 @@ h1, h2 {
             <a href="/visualization/roles_chart" class="button">View Users by Roles</a>
             <a href="/visualization/sales_by_city" class="button">Sales Based on City</a>
             <a href="/visualization/revenue_trends" class="button">Revenue Trends</a>
-            <a href="/visualization/delivery_chart" class="button">Delivery chart</a>
+            <a href="/visualization/delivery_chart" class="button">Delivery_chart</a>
             <a href="/visualization/inventory_status" class="button">Inventory Status</a>
             <a href="/visualization/financial_health" class="button">Financial status</a>
             <a href="/visualization/customer_trends" class="button">Customer Trends</a>
         </div>
 
-        <!-- Main Content -->
-    <div class="content">
         <!-- Chart Section -->
+        <h1>Financial Health Dashboard</h1>
         <div class="chart-container">
-            <h1>{{title}}</h1>
-            {% if chart_url %}
-                <img src="data:image/png;base64,{{ chart_url }}" >
-            {% else %}
-                <p>No chart available.</p>
-            {% endif %}
+            <img src="data:image/png;base64,{{ img_line_base64 }}" alt="Financial Performance Chart">
         </div>
 
-        <!-- Real-Time Data Table -->
-        <div class="data-table">
-            <h2>{{side_title}}</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>{{t1}}</th>
-                        <th>{{t2}}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for city, sales in city_sales %}
-                    <tr>
-                        <td>{{ city }}</td>
-                        <td>{{ sales * 100 }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Analytics Section -->
+    <!-- Real-Time Analytics Section -->
+    <div class="analytics-section">
+        <div class="analytics-box">
+            <h2>Current Revenue</h2>
+            <p style="font-size: 24px; color: blue;">Rs {{ real_time_analytics['Current Revenue'] }}</p>
         </div>
-        
+        <div class="analytics-box">
+            <h2>Current Expenses</h2>
+            <p style="font-size: 24px; color: red;">Rs {{ real_time_analytics['Current Expenses'] }}</p>
+        </div>
+        <div class="analytics-box">
+            <h2>Current Profit</h2>
+            <p style="font-size: 24px; color: green;">Rs {{ real_time_analytics['Current Profit'] }}</p>
+        </div>
     </div>
-        </div>
+
+    <!-- Table Section -->
+    <h3>Financial Data Table</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Total (Rs)</th>
+                <th>Expenses (Rs)</th>
+                <th>Profit (Rs)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in financial_data %}
+                <tr>
+                    <td>{{ record.customer }}</td>
+                    <td>{{ record.product }}</td>
+                    <td>{{ record.quantity }}</td>
+                    <td>{{ record.total }}</td>
+                    <td>{{ record.expenses }}</td>
+                    <td>{{ record.profit }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% endblock %}
-    
 </body>
 </html>
