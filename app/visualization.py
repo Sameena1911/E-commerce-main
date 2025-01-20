@@ -1,10 +1,10 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import matplotlib
 matplotlib.use('Agg')  # Use a non-interactive backend
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from sqlalchemy import func
-import io
+import io 
 from datetime import datetime, timedelta
 from io import BytesIO
 import base64
@@ -297,11 +297,63 @@ def financial_health():
                            expenses=expenses, 
                            profit=profit,
                            financial_data=financial_data)
+def generate_chart(data):
+    product_names = [item["name"] for item in data]
+    stock = [item["stock"] for item in data]
+
+  
+    # Create bar chart
+    plt.figure(figsize=(8, 6))
+    plt.bar(product_names, stock, color="skyblue")
+    plt.title("Product Stock Chart")
+    plt.xlabel("Products")
+    plt.ylabel("Stock")
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+
+    # Save the chart as a base64 image
+    buf = BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight")
+    buf.seek(0)
+    chart_data = base64.b64encode(buf.getvalue()).decode("utf-8")
+    buf.close()
+    return chart_data
+@visualization.route('/visualization/<category>')
+
+def category_page(category):
+    page = request.args.get('page', default=1, type=int)
+    has_next = True  # Example logic for pagination
+
+    inventory_data = {
+    "accessories": {"products": [{"name": "Watch", "stock": 50}, {"name": "Belt", "stock": 30}], "title": "Accessories"},
+    "kids": {"products": [{"name": "Toy", "stock": 60}, {"name": "Kids T-shirt", "stock": 40}], "title": "Kids"},
+    "womens_fashion": {"products": [{"name": "Dress", "stock": 70}, {"name": "Handbag", "stock": 25}], "title": "Women's Fashion"},
+    "fashion": {"products": [{"name": "Shirt", "stock": 80}, {"name": "T-shirt", "stock": 60}], "title": "Fashion"},
+}
+    if category in inventory_data:
+        data = inventory_data[category]
+        chart_data = generate_chart(data["products"])
+        return render_template("category_page.html", category=category, title=data["title"], products=data["products"], chart_data=chart_data, page=page,  has_next=has_next,)
+    return "Category not found", 404
+
+
+
+
+
+
+
 @visualization.route('/inventory_status')
 def inventory_status():
-    categories = db.session.query(
-        Product.category, func.sum(Product.quantity).label('total_stock')
-    ).group_by(Product.category).all()
+    # Static data for demonstration
+    page = request.args.get('page', default=1, type=int)
+    has_next = True  # Example logic for pagination
+
+    categories = [
+        ("Fashion", 150),
+        ("Women's Fashion", 80),
+        ("Kids", 120),
+        ("Accessories", 60),
+        ("others", 90)
+    ]
 
     # Data for visualization
     category_labels = [category[0] for category in categories]
@@ -317,6 +369,7 @@ def inventory_status():
         "Category with Max Stock": max_stock_category,
         "Category with Min Stock": min_stock_category,
     }
+    
 
     # Default stock value
     default_stock = 2
@@ -338,12 +391,20 @@ def inventory_status():
     chart_data = base64.b64encode(buf.getvalue()).decode("utf-8")
     buf.close()
 
-    # Query to get product details
-    products = db.session.query(Product).all()
+    # Static product details
+    products = [
+        {"id": 1, "name": "Laptop", "category": "Electronics", "quantity": 50},
+        {"id": 2, "name": "Chair", "category": "Furniture", "quantity": 30},
+        {"id": 3, "name": "T-shirt", "category": "Clothing", "quantity": 70},
+        {"id": 4, "name": "Novel", "category": "Books", "quantity": 20},
+        {"id": 5, "name": "Action Figure", "category": "Toys", "quantity": 40}
+    ]
 
     return render_template(
-        "inventory_status.html",
+        "vinventory_status.html",
+        page=page,
         chart_data=chart_data,
+        has_next=has_next,
         analytics=analytics,
         products=products,
     )

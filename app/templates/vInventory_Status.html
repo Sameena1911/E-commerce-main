@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Bar Graph Display</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        /* Button Styling */
+        .button-container, .button-container1 {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .button, .button1 {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            text-decoration: none;
+        }
+
+        .button1 {
+            background-color: #27887b;
+        }
+
+        .button:hover, .button1:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+            text-decoration: none;
+        }
+
+        .button.active, .button1.active {
+            background-color: #004080;
+            color: #fff;
+        }
+
+        /* Chart Section */
+        .chart-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        /* Analytics Section */
+        .analytics-section {
+            display: flex;
+            justify-content: space-evenly;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .analytics-card {
+            width: 28%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            text-align: center;
+            margin: 10px;
+        }
+
+        .analytics-card h3 {
+            font-size: 18px;
+        }
+
+        .analytics-card p {
+            font-size: 16px;
+        }
+
+        .search-bar {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .search-bar input {
+            width: 80%;
+            max-width: 400px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #f4f4f4;
+            font-size: 16px;
+        }
+
+        table tbody tr.low-stock {
+            background-color: #ffcccc;
+        }
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: white;
+            background-color: #007bff;
+            border-radius: 4px;
+        }
+
+        .pagination a:hover {
+            background-color: #0056b3;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .analytics-card {
+                width: 90%;
+                margin: 10px auto;
+            }
+
+            table, table th, table td {
+                font-size: 14px;
+            }
+
+            .button, .button1 {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+        <!-- Navigation Buttons -->
+        {% extends "home.html" %}
+
+    {% block content %}
+    <div class="content">
+        <div class="button-container">
+            <a href="/visualization/roles_chart" class="button">View Users by Roles</a>
+            <a href="/visualization/sales_by_city" class="button">Sales Based on City</a>
+            <a href="/visualization/revenue_trends" class="button">Revenue Trends</a>
+            <a href="/visualization/delivery_chart" class="button">Delivery Chart</a>
+            <a href="/visualization/inventory_status" class="button">Inventory Status</a>
+            <a href="/visualization/financial_health" class="button">Financial status</a>
+            <a href="/visualization/customer_trends" class="button">Customer Trends</a>
+        </div>
+        <div class="button-container1">
+            <a href="/visualization/visualization/accessories" class="button1">Accessories</a>
+            <a href="/visualization/visualization/kids" class="button1">Kids</a>
+            <a href="/visualization/visualization/womens_fashion" class="button1">Women's Fashion</a>
+            <a href="/visualization/visualization/fashion" class="button1">Fashion</a>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-section">
+            <img src="data:image/png;base64,{{ chart_data }}" alt="Stock Analytics Chart">
+        </div>
+
+       <!-- Analytics Section -->
+       <div class="analytics-section">
+        <div class="analytics-card">
+            <h3>Total Stock</h3>
+            <p>{{ analytics['Total Stock'] }}</p>
+        </div>
+        <div class="analytics-card">
+            <h3>Number of Products</h3>
+            <p>{{ analytics['Number of Products'] }}</p>
+        </div>
+        <div class="analytics-card">
+            <h3>Low Stock Alerts</h3>
+            <p>{{ analytics['Low Stock Alerts'] }}</p>
+        </div>
+        <div class="analytics-card">
+            <h3>Out of Stock Items</h3>
+            <p>{{ analytics['Out of Stock Items'] }}</p>
+        </div>
+        <div class="analytics-card">
+            <h3>Category with Max Stock</h3>
+            <p>{{ analytics['Category with Max Stock'] }}</p>
+        </div>
+        <div class="analytics-card">
+            <h3>Category with Min Stock</h3>
+            <p>{{ analytics['Category with Min Stock'] }}</p>
+        </div>
+    </div>
+
+        <!-- Product Table -->
+        <div class="table-section">
+            <h3>Product Details</h3>
+            <div class="search-bar">
+                <input type="text" placeholder="Search products..." id="search">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Price ($)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr class="{% if product.quantity < 10 %}low-stock{% endif %}">
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.category }}</td>
+                        <td>{{ product.quantity }}</td>
+                        <td>{{ product.price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="?page={{ page-1 }}">Previous</a>
+            {% endif %}
+            {% if has_next %}
+            <a href="?page={{ page+1 }}">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endblock %}
+    <!-- Search Script -->
+    <script>
+        document.querySelector('#search').addEventListener('input', function (e) {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('tbody tr').forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>
