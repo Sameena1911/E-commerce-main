@@ -1,3 +1,7 @@
+  <!-- Navigation Buttons -->
+  {% extends "home.html" %}
+
+  {% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -132,25 +136,7 @@
         table tbody tr.low-stock {
             background-color: #ffcccc;
         }
-        /* Pagination */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-        }
-
-        .pagination a {
-            margin: 0 5px;
-            padding: 8px 12px;
-            text-decoration: none;
-            color: white;
-            background-color: #007bff;
-            border-radius: 4px;
-        }
-
-        .pagination a:hover {
-            background-color: #0056b3;
-        }
+     
 
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
@@ -172,10 +158,7 @@
 </head>
 <body>
     
-        <!-- Navigation Buttons -->
-        {% extends "home.html" %}
-
-    {% block content %}
+      
     <div class="content">
         <div class="button-container">
             <a href="/visualization/roles_chart" class="button">View Users by Roles</a>
@@ -238,7 +221,7 @@
                         <th>Product Name</th>
                         <th>Category</th>
                         <th>Quantity</th>
-                        <th>Price ($)</th>
+                       
                     </tr>
                 </thead>
                 <tbody>
@@ -247,7 +230,7 @@
                         <td>{{ product.name }}</td>
                         <td>{{ product.category }}</td>
                         <td>{{ product.quantity }}</td>
-                        <td>{{ product.price }}</td>
+                        
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -255,16 +238,9 @@
         </div>
 
         <!-- Pagination -->
-        <div class="pagination">
-            {% if page > 1 %}
-            <a href="?page={{ page-1 }}">Previous</a>
-            {% endif %}
-            {% if has_next %}
-            <a href="?page={{ page+1 }}">Next</a>
-            {% endif %}
-        </div>
+       
     </div>
-    {% endblock %}
+   
     <!-- Search Script -->
     <script>
         document.querySelector('#search').addEventListener('input', function (e) {
@@ -276,3 +252,4 @@
     </script>
 </body>
 </html>
+{% endblock %}
